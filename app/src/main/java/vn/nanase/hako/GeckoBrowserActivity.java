@@ -15,23 +15,18 @@ public final class GeckoBrowserActivity extends Activity {
   session=new GeckoSession();session.setNavigationDelegate(new GeckoSession.NavigationDelegate(){
    public void onCanGoBack(GeckoSession s,boolean value){back=value;}
    public GeckoResult<AllowOrDeny> onLoadRequest(GeckoSession s,LoadRequest req){
-    if(req.uri.startsWith("https://")||req.uri.startsWith("http://")||req.uri.startsWith("about:")){
-      url=req.uri;return GeckoResult.fromValue(AllowOrDeny.ALLOW);
-    }
-    return GeckoResult.fromValue(AllowOrDeny.DENY);
+    if(!req.uri.startsWith("https://"))return GeckoResult.fromValue(AllowOrDeny.DENY);
+    url=req.uri;return GeckoResult.fromValue(AllowOrDeny.ALLOW);
    }
   });
   session.setProgressDelegate(new GeckoSession.ProgressDelegate(){public void onPageStop(GeckoSession s,boolean success){status.setText(success?"Gecko Lite · Phiên được giữ trong app":"Chưa tải được trang · Kiểm tra mạng");}});
-  GeckoRuntime runtime;try{runtime=GeckoHost.get(this);}catch(Exception e){finish();return;}
-  session.open(runtime);view.setSession(session);
-  session.loadUri(getIntent().getStringExtra("url"));
+  GeckoRuntime runtime;try{runtime=GeckoHost.get(this);}catch(Exception e){finish();return;}session.open(runtime);view.setSession(session);
   runtime.getWebExtensionController().ensureBuiltIn("resource://android/assets/gecko-bridge/","hako-lite@nanase.vn").accept(ext->{
-   if(isFinishing()||isDestroyed())return;
-   session.getWebExtensionController().setMessageDelegate(ext,new WebExtension.MessageDelegate(){public GeckoResult<Object> onMessage(String app,Object message,WebExtension.MessageSender sender){
+   if(isFinishing()||isDestroyed())return;session.getWebExtensionController().setMessageDelegate(ext,new WebExtension.MessageDelegate(){public GeckoResult<Object> onMessage(String app,Object message,WebExtension.MessageSender sender){
     if(sender.session==session&&HakoParser.isOrigin(sender.url)&&message instanceof JSONObject){JSONObject m=(JSONObject)message;if(m.has("history")){String h=m.optString("history","[]");if(h.length()<200000)history=h;}}
     return null;
-   }},"hako");
-  },e->{});
+   }},"hako");session.loadUri(getIntent().getStringExtra("url"));
+  },e->{status.setText("Không khởi tạo được Gecko");});
  }
  private void done(boolean read){setResult(RESULT_OK,new Intent().putExtra("url",url).putExtra("history",history).putExtra("read",read));finish();}
  public void onBackPressed(){if(back)session.goBack();else done(false);}
