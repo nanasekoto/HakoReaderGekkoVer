@@ -14,6 +14,7 @@
  function read(){
   if(document.readyState==='loading'){if(!waitingLogged){waitingLogged=true;send({phase:'waiting-dom',ready:document.readyState});}setTimeout(read,500);return;}
   if(document.querySelector('#challenge-running, #challenge-form')||/just a moment|performing security verification/i.test(document.title)){
+   if(++tries<15){setTimeout(read,1000);return;}
    send({error:'Cần xác minh HAKO. Mở Đăng nhập; tải tự động đã dừng.'});return;
   }
   let value={};try{value=JSON.parse(eval(command.script));}catch(e){if(!errorLogged){errorLogged=true;send({phase:'eval-error-'+e.name,ready:document.readyState});}}

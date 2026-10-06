@@ -49,7 +49,8 @@ public final class Repository {
   }
 
   public static String page(String u, boolean auth) throws Exception {
-    return new String(fetch(u, auth, 8 * 1024 * 1024), "UTF-8");
+    String script = "JSON.stringify({html:document.documentElement.outerHTML})";
+    return new String(GeckoClient.request(u, script, 8 * 1024 * 1024), "UTF-8");
   }
 
   public static void importShelf(Context ctx) throws Exception {

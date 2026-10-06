@@ -1,6 +1,15 @@
 (function(){
  var e=document.getElementById('chapter-content');
- if(!e){var t=(document.body?document.body.innerText:'').slice(0,3000);if(/verify you are human|checking your browser|just a moment|too many requests|access denied/i.test(t))return JSON.stringify({error:'Trang yêu cầu xác minh hoặc đang giới hạn truy cập. Mở HAKO để kiểm tra.'});return JSON.stringify({});}
+ if(!e){
+  var t=(document.body?document.body.innerText:'').slice(0,3000);
+  if(document.querySelector('#challenge-running, #challenge-form, iframe[src*="cloudflare"]')||/checking your browser|just a moment|security verification/i.test(t)){
+   return JSON.stringify({});
+  }
+  if(/access denied|too many requests/i.test(t)){
+   return JSON.stringify({error:'Trang giới hạn truy cập. Mở HAKO để kiểm tra.'});
+  }
+  return JSON.stringify({});
+ }
  var protectedNode=e.querySelector('#chapter-c-protected');
  if(protectedNode&&!protectedNode.innerText.trim())return JSON.stringify({});
  var copy=e.cloneNode(true);

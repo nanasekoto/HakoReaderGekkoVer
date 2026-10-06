@@ -26,10 +26,15 @@ public final class GeckoEngineService extends Service {
   GeckoRuntime runtime;try{runtime=GeckoHost.get(this);}catch(Exception e){finish("Gecko đang đóng; thử lại sau vài giây");return;}
   deadline=()->{if(current==job)finish("Trang chưa sẵn sàng sau 45 giây; không tải lại tự động");};ui.postDelayed(deadline,45000);
   if(b.getString("script")==null){
-   try{new GeckoWebExecutor(runtime).fetch(new WebRequest.Builder(url).header("Referer",HakoParser.ORIGIN+"/").build(),GeckoWebExecutor.FETCH_FLAGS_NO_REDIRECTS).accept(response->{
+   try{
+    WebRequest req = new WebRequest.Builder(url)
+        .header("Referer", HakoParser.ORIGIN + "/")
+        .header("User-Agent", "Mozilla/5.0 (Android 11; Mobile; rv:128.0) Gecko/128.0 Firefox/128.0")
+        .build();
+    new GeckoWebExecutor(runtime).fetch(req, 0).accept(response->{
     if(current!=job)return;
     activeBody=response.body;
-    if(response.statusCode!=200){finish("HAKO trả HTTP "+response.statusCode+". Dừng tải; mở Đăng nhập để kiểm tra.");return;}
+    if(response.statusCode!=200 && response.statusCode!=304){finish("HAKO trả HTTP "+response.statusCode+". Dừng tải; mở Đăng nhập để kiểm tra.");return;}
     new Thread(()->{String error=null;try(InputStream in=response.body;FileOutputStream out=new FileOutputStream(b.getString("file"))){byte[] data=new byte[8192];int n,total=0;while((n=in.read(data))!=-1){total+=n;if(total>b.getInt("max"))throw new IOException("Tài nguyên quá lớn");out.write(data,0,n);}out.getFD().sync();}catch(Exception e){error="Không lưu được tài nguyên";}final String err=error;ui.post(()->{if(current==job)finish(err);});},"Gecko asset").start();
    },error->{if(current==job)finish("Không tải được trang qua Gecko");});}catch(Exception e){finish("Không khởi động được yêu cầu Gecko");}
    return;
